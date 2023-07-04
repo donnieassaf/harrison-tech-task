@@ -48,7 +48,7 @@ Follow the steps below to deploy the "hello world" application:
 
 
 ## Preferred Deployment Method: Helm and ArgoCD on Amazon EKS
-While Minikube provides a great local development environment, when it comes to production deployments, I would much prefer this method involving using Helm Charts for packaging the application, ArgoCD for continuous deployment, and provisioning Amazon EKS (Elastic Kubernetes Service) for cluster management in Terraform.
+While Minikube provides a great local development environment, when it comes to production deployments, I would much prefer the method involving using Helm Charts for packaging the application, ArgoCD for continuous deployment, and provisioning Amazon EKS (Elastic Kubernetes Service) for cluster management in Terraform.
 
 ## Additional Notes
 
