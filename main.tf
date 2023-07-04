@@ -9,7 +9,7 @@ terraform {
 
 provider "kubernetes" {
   config_context_cluster = "minikube"
-  config_path            = "/Users/andrew/.kube/config" # Update config path
+  config_path            = "~/.kube/config"
 }
 
 resource "kubernetes_namespace" "main" {
@@ -21,7 +21,7 @@ resource "kubernetes_namespace" "main" {
 resource "kubernetes_deployment" "nginx" {
   metadata {
     name      = "harrison-task"
-    namespace = kubernetes_namespace.harrison.metadata[0].name
+    namespace = kubernetes_namespace.main.metadata[0].name
   }
 
   spec {
@@ -43,7 +43,7 @@ resource "kubernetes_deployment" "nginx" {
       spec {
         container {
           name  = "nginx"
-          image = "nginx:latest"
+          image = "nginx:1.21.1"
 
           volume_mount {
             name       = "html-volume"
@@ -56,7 +56,7 @@ resource "kubernetes_deployment" "nginx" {
           name = "html-volume"
 
           config_map {
-            name = kubernetes_config_map.html.metadata[0].name
+            name = kubernetes_config_map.main.metadata[0].name
           }
         }
       }
@@ -65,10 +65,10 @@ resource "kubernetes_deployment" "nginx" {
 }
 
 
-resource "kubernetes_config_map" "html" {
+resource "kubernetes_config_map" "main" {
   metadata {
     name      = "html-config-map"
-    namespace = kubernetes_namespace.harrison.metadata[0].name
+    namespace = kubernetes_namespace.main.metadata[0].name
   }
 
   data = {
@@ -194,7 +194,7 @@ EOF
 resource "kubernetes_service_v1" "main" {
   metadata {
     name      = "hello-world-service"
-    namespace = kubernetes_namespace.harrison.metadata[0].name
+    namespace = kubernetes_namespace.main.metadata[0].name
   }
 
   spec {
@@ -207,40 +207,33 @@ resource "kubernetes_service_v1" "main" {
       port        = 80
       target_port = 80
     }
+    type = "NodePort"
   }
 }
 
 
 
 resource "kubernetes_ingress_v1" "main" {
+  wait_for_load_balancer = true
   metadata {
     name      = "harrison-task-ingress"
-    namespace = kubernetes_namespace.harrison.metadata[0].name
+    namespace = kubernetes_namespace.main.metadata[0].name
   }
-
   spec {
-    default_backend {
-      service {
-        name = kubernetes_service_v1.hello_world.metadata[0].name
-        port {
-          number = 80
-        }
-      }
-    }
-
+    ingress_class_name = "nginx"
     rule {
+      host = "harrisontask.com"
       http {
         path {
+          path = "/"
           backend {
             service {
-              name = kubernetes_service_v1.hello_world.metadata[0].name
+              name = kubernetes_service_v1.main.metadata[0].name
               port {
                 number = 80
               }
             }
           }
-
-          path = "/"
         }
       }
     }
